@@ -1,0 +1,8 @@
+node_modules/
+.expo/
+.expo-export-test/
+dist/
+build/
+*.ipa
+*.log
+.DS_Store

@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Emmanuel",
+    "slug": "emmanuel-music",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/emmanuel-photo.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/emmanuel-photo.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#050718"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.emmanuel.music",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio"
+        ],
+        "NSAppleMusicUsageDescription": "Emmanuel usa audio para reproducir tu musica."
+      }
+    },
+    "android": {
+      "package": "com.emmanuel.music"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "replace-with-eas-project-id"
+      }
+    }
+  }
+}
