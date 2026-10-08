@@ -19,6 +19,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.emmanuel.music",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
           "audio"
         ],

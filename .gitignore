@@ -5,4 +5,5 @@ dist/
 build/
 *.ipa
 *.log
+work-logs*
 .DS_Store
