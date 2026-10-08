@@ -27,6 +27,12 @@
     },
     "android": {
       "package": "com.emmanuel.music"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "62fbb08b-03bd-41ef-b4ca-47a4cfd29451"
+      }
+    },
+    "owner": "emmanuel09"
   }
 }
