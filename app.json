@@ -12,7 +12,8 @@
       "backgroundColor": "#050718"
     },
     "assetBundlePatterns": [
-      "**/*"
+      "assets/emmanuel-photo.png",
+      "assets/reference-player.jpg"
     ],
     "ios": {
       "supportsTablet": true,
@@ -26,11 +27,6 @@
     },
     "android": {
       "package": "com.emmanuel.music"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "replace-with-eas-project-id"
-      }
     }
   }
 }

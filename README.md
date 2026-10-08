@@ -15,18 +15,21 @@ Base profesional de una app musical tipo premium para iPhone, creada con Expo/Re
 - Reproduccion de MP3 online con `expo-av`
 - Descarga offline local con `expo-file-system`
 - Estado guardado con `AsyncStorage`
+- Biblioteca local incluida en `assets/music`
+- Autodescarga al abrir la app: las canciones del repo se guardan solas para modo offline
+- Background audio configurado para iOS con `UIBackgroundModes: audio`
 - Configuracion preparada para compilar iOS como `.ipa`
 
 ## Importante sobre musica y descargas
 
-La app busca audio publico descargable en Internet Archive. Aun asi, antes de publicar comercialmente debes revisar la licencia de cada album/pista. Para musica comercial de artistas famosos necesitas una de estas opciones:
+La app ahora usa tu biblioteca local de `assets/music` como fuente principal. Aun asi, antes de publicar comercialmente debes revisar que tienes permiso para distribuir cada pista. Para musica comercial de artistas famosos necesitas una de estas opciones:
 
 - usar musica propia;
 - conectar una biblioteca de audios con licencia;
 - usar una API/licencia comercial de streaming;
 - permitir que el usuario importe archivos que ya posee.
 
-La base ya deja listo el flujo completo para buscar, reproducir, guardar y descargar audios. Si luego consigues un proveedor con licencia, solo hay que cambiar la funcion `fetchArchiveAlbums` en `App.js`.
+La base ya deja listo el flujo completo para buscar, reproducir, guardar y descargar audios. Si luego consigues un proveedor con licencia, solo hay que cambiar la funcion `fetchArchiveAlbums` o el manifiesto `src/localMusic.js`.
 
 ## Probar en desarrollo
 
@@ -49,6 +52,16 @@ npx eas build --platform ios
 ```
 
 El comando creara el archivo instalable para iPhone desde la nube de Expo.
+
+## GitHub Actions para IPA
+
+El workflow esta en `.github/workflows/ios-ipa.yml`. Para que genere el IPA desde GitHub Actions debes agregar este secreto en el repo:
+
+```text
+EXPO_TOKEN
+```
+
+Luego entra a **Actions > Build iOS IPA > Run workflow**. EAS pedira la configuracion de Apple Developer si la cuenta no esta configurada.
 
 ## Subir a GitHub
 

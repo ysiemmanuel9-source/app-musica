@@ -1,0 +1,533 @@
+[
+  {
+    "id": "local-001",
+    "title": "Æternum.f140",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "001-ternum-f140.m4a",
+    "ext": "m4a",
+    "bytes": 3219352
+  },
+  {
+    "id": "local-002",
+    "title": "Agosto",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "002-bad-bunny-agosto.mp3",
+    "ext": "mp3",
+    "bytes": 5835733
+  },
+  {
+    "id": "local-003",
+    "title": "Aguacero",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "003-bad-bunny-aguacero.mp3",
+    "ext": "mp3",
+    "bytes": 8716263
+  },
+  {
+    "id": "local-004",
+    "title": "Andrea",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "004-bad-bunny-andrea.mp3",
+    "ext": "mp3",
+    "bytes": 13866504
+  },
+  {
+    "id": "local-005",
+    "title": "BAILE INoLVIDABLE",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "005-bad-bunny-baile-inolvidable.mp3",
+    "ext": "mp3",
+    "bytes": 14979221
+  },
+  {
+    "id": "local-006",
+    "title": "BOKeTE",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "006-bad-bunny-bokete.mp3",
+    "ext": "mp3",
+    "bytes": 8904363
+  },
+  {
+    "id": "local-007",
+    "title": "CAFé CON RON",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "007-bad-bunny-caf-con-ron.mp3",
+    "ext": "mp3",
+    "bytes": 9419033
+  },
+  {
+    "id": "local-008",
+    "title": "Callaita",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "008-bad-bunny-callaita.mp3",
+    "ext": "mp3",
+    "bytes": 10299833
+  },
+  {
+    "id": "local-009",
+    "title": "Después de la Playa",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "009-bad-bunny-despu-s-de-la-playa.mp3",
+    "ext": "mp3",
+    "bytes": 9493419
+  },
+  {
+    "id": "local-010",
+    "title": "Dos Mil 16",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "010-bad-bunny-dos-mil-16.mp3",
+    "ext": "mp3",
+    "bytes": 8622132
+  },
+  {
+    "id": "local-011",
+    "title": "DtMF",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "011-bad-bunny-dtmf.mp3",
+    "ext": "mp3",
+    "bytes": 9750528
+  },
+  {
+    "id": "local-012",
+    "title": "Efecto",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "012-bad-bunny-efecto.mp3",
+    "ext": "mp3",
+    "bytes": 8799935
+  },
+  {
+    "id": "local-013",
+    "title": "El Apagón",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "013-bad-bunny-el-apag-n.mp3",
+    "ext": "mp3",
+    "bytes": 8349139
+  },
+  {
+    "id": "local-014",
+    "title": "EL CLúB",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "014-bad-bunny-el-cl-b.mp3",
+    "ext": "mp3",
+    "bytes": 9167942
+  },
+  {
+    "id": "local-015",
+    "title": "Enséñame a Bailar",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "015-bad-bunny-ens-ame-a-bailar.mp3",
+    "ext": "mp3",
+    "bytes": 7315764
+  },
+  {
+    "id": "local-016",
+    "title": "EoO",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "016-bad-bunny-eoo.mp3",
+    "ext": "mp3",
+    "bytes": 8454604
+  },
+  {
+    "id": "local-017",
+    "title": "KETU TeCRÉ",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "017-bad-bunny-ketu-tecr.mp3",
+    "ext": "mp3",
+    "bytes": 10297567
+  },
+  {
+    "id": "local-018",
+    "title": "KLOuFRENS",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "018-bad-bunny-kloufrens.mp3",
+    "ext": "mp3",
+    "bytes": 8228692
+  },
+  {
+    "id": "local-019",
+    "title": "La Corriente",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "019-bad-bunny-la-corriente.mp3",
+    "ext": "mp3",
+    "bytes": 8211100
+  },
+  {
+    "id": "local-020",
+    "title": "LA MuDANZA",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "020-bad-bunny-la-mudanza.mp3",
+    "ext": "mp3",
+    "bytes": 8785135
+  },
+  {
+    "id": "local-021",
+    "title": "LO QUE LE PASÓ A HAWAii",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "021-bad-bunny-lo-que-le-pas-a-hawaii.mp3",
+    "ext": "mp3",
+    "bytes": 9440967
+  },
+  {
+    "id": "local-022",
+    "title": "Me Fui de Vacaciones",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "022-bad-bunny-me-fui-de-vacaciones.mp3",
+    "ext": "mp3",
+    "bytes": 7513454
+  },
+  {
+    "id": "local-023",
+    "title": "Me Porto Bonito",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "023-bad-bunny-me-porto-bonito.mp3",
+    "ext": "mp3",
+    "bytes": 7418295
+  },
+  {
+    "id": "local-024",
+    "title": "Moscow Mule",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "024-bad-bunny-moscow-mule.mp3",
+    "ext": "mp3",
+    "bytes": 10115739
+  },
+  {
+    "id": "local-025",
+    "title": "Neverita",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "025-bad-bunny-neverita.mp3",
+    "ext": "mp3",
+    "bytes": 7200690
+  },
+  {
+    "id": "local-026",
+    "title": "NUEVAYoL",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "026-bad-bunny-nuevayol.mp3",
+    "ext": "mp3",
+    "bytes": 7610535
+  },
+  {
+    "id": "local-027",
+    "title": "Ojitos Lindos",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "027-bad-bunny-ojitos-lindos.mp3",
+    "ext": "mp3",
+    "bytes": 10611550
+  },
+  {
+    "id": "local-028",
+    "title": "Otro Atardecer",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "028-bad-bunny-otro-atardecer.mp3",
+    "ext": "mp3",
+    "bytes": 10056151
+  },
+  {
+    "id": "local-029",
+    "title": "Party",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "029-bad-bunny-party.mp3",
+    "ext": "mp3",
+    "bytes": 9382553
+  },
+  {
+    "id": "local-030",
+    "title": "PERFuMITO NUEVO",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "030-bad-bunny-perfumito-nuevo.mp3",
+    "ext": "mp3",
+    "bytes": 8291473
+  },
+  {
+    "id": "local-031",
+    "title": "PIToRRO DE COCO",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "031-bad-bunny-pitorro-de-coco.mp3",
+    "ext": "mp3",
+    "bytes": 8528889
+  },
+  {
+    "id": "local-032",
+    "title": "Tarot",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "032-bad-bunny-tarot.mp3",
+    "ext": "mp3",
+    "bytes": 9793590
+  },
+  {
+    "id": "local-033",
+    "title": "Tití Me Preguntó",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "033-bad-bunny-tit-me-pregunt.mp3",
+    "ext": "mp3",
+    "bytes": 10026843
+  },
+  {
+    "id": "local-034",
+    "title": "TURiSTA",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "034-bad-bunny-turista.mp3",
+    "ext": "mp3",
+    "bytes": 7864699
+  },
+  {
+    "id": "local-035",
+    "title": "Un Coco",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "035-bad-bunny-un-coco.mp3",
+    "ext": "mp3",
+    "bytes": 8132625
+  },
+  {
+    "id": "local-036",
+    "title": "Un Ratito",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "036-bad-bunny-un-ratito.mp3",
+    "ext": "mp3",
+    "bytes": 7353400
+  },
+  {
+    "id": "local-037",
+    "title": "Un Verano Sin Ti",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "037-bad-bunny-un-verano-sin-ti.mp3",
+    "ext": "mp3",
+    "bytes": 6200787
+  },
+  {
+    "id": "local-038",
+    "title": "VeLDÁ",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "038-bad-bunny-veld.mp3",
+    "ext": "mp3",
+    "bytes": 9678394
+  },
+  {
+    "id": "local-039",
+    "title": "VOY A LLeVARTE PA PR",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "039-bad-bunny-voy-a-llevarte-pa-pr.mp3",
+    "ext": "mp3",
+    "bytes": 6516503
+  },
+  {
+    "id": "local-040",
+    "title": "WELTiTA",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "040-bad-bunny-weltita.mp3",
+    "ext": "mp3",
+    "bytes": 7764299
+  },
+  {
+    "id": "local-041",
+    "title": "Yo No Soy Celoso",
+    "artist": "Bad Bunny",
+    "album": "Musica local",
+    "file": "041-bad-bunny-yo-no-soy-celoso.mp3",
+    "ext": "mp3",
+    "bytes": 9505964
+  },
+  {
+    "id": "local-042",
+    "title": "Bajo De La Piel",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "042-bajo-de-la-piel.m4a",
+    "ext": "m4a",
+    "bytes": 2728527
+  },
+  {
+    "id": "local-043",
+    "title": "CR7.f140",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "043-cr7-f140.m4a",
+    "ext": "m4a",
+    "bytes": 2252580
+  },
+  {
+    "id": "local-044",
+    "title": "Cuando El Agua Hirviendo",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "044-cuando-el-agua-hirviendo.m4a",
+    "ext": "m4a",
+    "bytes": 2854559
+  },
+  {
+    "id": "local-045",
+    "title": "El Invisible",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "045-el-invisible.m4a",
+    "ext": "m4a",
+    "bytes": 3291356
+  },
+  {
+    "id": "local-046",
+    "title": "En Vela.f140",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "046-en-vela-f140.m4a",
+    "ext": "m4a",
+    "bytes": 3445417
+  },
+  {
+    "id": "local-047",
+    "title": "Frente a Frente.f140",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "047-frente-a-frente-f140.m4a",
+    "ext": "m4a",
+    "bytes": 2843180
+  },
+  {
+    "id": "local-048",
+    "title": "Jangadero",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "048-jangadero.m4a",
+    "ext": "m4a",
+    "bytes": 4371783
+  },
+  {
+    "id": "local-049",
+    "title": "La Vida Era Más Corta",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "049-la-vida-era-m-s-corta.m4a",
+    "ext": "m4a",
+    "bytes": 3170533
+  },
+  {
+    "id": "local-050",
+    "title": "Llora Llora",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "050-llora-llora.m4a",
+    "ext": "m4a",
+    "bytes": 3944606
+  },
+  {
+    "id": "local-051",
+    "title": "Lucia",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "051-lucia.m4a",
+    "ext": "m4a",
+    "bytes": 3062076
+  },
+  {
+    "id": "local-052",
+    "title": "Luciérnagas",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "052-luci-rnagas.m4a",
+    "ext": "m4a",
+    "bytes": 3024303
+  },
+  {
+    "id": "local-053",
+    "title": "MDLD.f140",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "053-mdld-f140.m4a",
+    "ext": "m4a",
+    "bytes": 2266296
+  },
+  {
+    "id": "local-054",
+    "title": "MmmM",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "054-mmmm.m4a",
+    "ext": "m4a",
+    "bytes": 3459429
+  },
+  {
+    "id": "local-055",
+    "title": "No Soy Amigo de Todos.f140",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "055-no-soy-amigo-de-todos-f140.m4a",
+    "ext": "m4a",
+    "bytes": 2315025
+  },
+  {
+    "id": "local-056",
+    "title": "Radamel",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "056-radamel.m4a",
+    "ext": "m4a",
+    "bytes": 1341342
+  },
+  {
+    "id": "local-057",
+    "title": "Recordé",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "057-record.m4a",
+    "ext": "m4a",
+    "bytes": 2913638
+  },
+  {
+    "id": "local-058",
+    "title": "Solifican12",
+    "artist": "Emmanuel Music",
+    "album": "Musica local",
+    "file": "058-solifican12.m4a",
+    "ext": "m4a",
+    "bytes": 2708536
+  },
+  {
+    "id": "local-059",
+    "title": "444",
+    "artist": "Yan Block",
+    "album": "Musica local",
+    "file": "059-yan-block-444.mp3",
+    "ext": "mp3",
+    "bytes": 7052139
+  }
+]

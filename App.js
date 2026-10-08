@@ -19,11 +19,12 @@ import { Audio } from "expo-av";
 import { BlurView } from "expo-blur";
 import * as FileSystem from "expo-file-system";
 import { LinearGradient } from "expo-linear-gradient";
+import localAlbums from "./src/localMusic";
 
 const cover = require("./assets/emmanuel-photo.png");
 const STORE_KEY = "emmanuel.music.state.v2";
 const DOWNLOAD_DIR = `${FileSystem.documentDirectory}emmanuel-audio/`;
-const DEFAULT_QUERY = "creative commons music";
+const DEFAULT_QUERY = "";
 
 function text(value, fallback = "Desconocido") {
   if (Array.isArray(value)) return value.filter(Boolean).join(", ") || fallback;
@@ -143,9 +144,10 @@ function MiniStat({ icon, value, label }) {
 
 export default function App() {
   const soundRef = useRef(null);
+  const autoDownloadStarted = useRef(false);
   const [tab, setTab] = useState("home");
   const [query, setQuery] = useState(DEFAULT_QUERY);
-  const [albums, setAlbums] = useState([]);
+  const [albums, setAlbums] = useState(localAlbums);
   const [playlistIds, setPlaylistIds] = useState([]);
   const [downloaded, setDownloaded] = useState({});
   const [current, setCurrent] = useState(null);
@@ -154,7 +156,7 @@ export default function App() {
   const [repeat, setRepeat] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
-  const [status, setStatus] = useState("Catalogo publico de Internet Archive");
+  const [status, setStatus] = useState("Biblioteca local lista sin internet");
 
   const tracks = useMemo(() => albums.flatMap((album) => album.tracks), [albums]);
   const playlist = useMemo(() => tracks.filter((track) => playlistIds.includes(track.id)), [tracks, playlistIds]);
@@ -177,10 +179,15 @@ export default function App() {
       const saved = await AsyncStorage.getItem(STORE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        setPlaylistIds(parsed.playlistIds || []);
+        setPlaylistIds(parsed.playlistIds?.length ? parsed.playlistIds : localAlbums.flatMap((album) => album.tracks.map((track) => track.id)));
         setDownloaded(parsed.downloaded || {});
+        autoDownloadLibrary(parsed.downloaded || {});
+      } else {
+        setPlaylistIds(localAlbums.flatMap((album) => album.tracks.map((track) => track.id)));
+        autoDownloadLibrary({});
       }
-      await search(DEFAULT_QUERY);
+      setCurrent(localAlbums[0]?.tracks[0] || null);
+      setLoading(false);
     } catch {
       setStatus("No se pudo cargar el catalogo inicial.");
     }
@@ -188,12 +195,22 @@ export default function App() {
 
   async function search(term = query) {
     setLoading(true);
-    setStatus("Buscando musica descargable...");
+    setStatus("Buscando en tus canciones...");
     try {
-      const result = await fetchArchiveAlbums(term || DEFAULT_QUERY);
+      const normalized = (term || "").trim().toLowerCase();
+      const localResult = localAlbums
+        .map((album) => ({
+          ...album,
+          tracks: album.tracks.filter((track) =>
+            !normalized ||
+            [track.title, track.artist, track.album].some((value) => `${value}`.toLowerCase().includes(normalized))
+          )
+        }))
+        .filter((album) => album.tracks.length);
+      const result = localResult.length ? localResult : await fetchArchiveAlbums(term || "creative commons music");
       setAlbums(result);
       setCurrent((old) => old || result[0]?.tracks[0] || null);
-      setStatus(result.length ? "Resultados descargables encontrados" : "No encontre MP3 descargables para esa busqueda");
+      setStatus(localResult.length ? "Resultados de tu biblioteca local" : "Resultados descargables encontrados online");
     } catch (error) {
       setStatus(error.message);
     } finally {
@@ -208,14 +225,15 @@ export default function App() {
         await soundRef.current.unloadAsync();
         soundRef.current = null;
       }
-      const { sound } = await Audio.Sound.createAsync({ uri: downloaded[track.id] || track.url }, { shouldPlay: true });
+      const source = track.asset || { uri: downloaded[track.id] || track.url };
+      const { sound } = await Audio.Sound.createAsync(source, { shouldPlay: true });
       sound.setOnPlaybackStatusUpdate((playback) => {
         if (playback.didJustFinish) repeat ? play(track) : playNext();
       });
       soundRef.current = sound;
       setCurrent(track);
       setIsPlaying(true);
-      setStatus(downloaded[track.id] ? "Reproduciendo offline" : "Reproduciendo online");
+      setStatus(track.asset || downloaded[track.id] ? "Reproduciendo offline" : "Reproduciendo online");
     } catch {
       Alert.alert("Audio", "No pude reproducir esta pista. Prueba otra del catalogo.");
     }
@@ -245,9 +263,14 @@ export default function App() {
     setPlaylistIds((items) => items.includes(track.id) ? items.filter((id) => id !== track.id) : [...items, track.id]);
   }
 
-  async function downloadTrack(track) {
+  async function downloadTrack(track, silent = false) {
     setBusyId(track.id);
     try {
+      if (track.asset) {
+        setDownloaded((items) => ({ ...items, [track.id]: "bundled" }));
+        setStatus(`Lista offline: ${track.title}`);
+        return;
+      }
       await FileSystem.makeDirectoryAsync(DOWNLOAD_DIR, { intermediates: true });
       const destination = localUri(track);
       const info = await FileSystem.getInfoAsync(destination);
@@ -255,26 +278,37 @@ export default function App() {
       setDownloaded((items) => ({ ...items, [track.id]: destination }));
       setStatus(`Descargada: ${track.title}`);
     } catch {
-      Alert.alert("Descarga", "No pude descargar esta pista. Puede que el archivo no este disponible.");
+      if (!silent) Alert.alert("Descarga", "No pude descargar esta pista. Puede que el archivo no este disponible.");
     } finally {
       setBusyId(null);
     }
   }
 
+  async function autoDownloadLibrary(savedDownloaded) {
+    if (autoDownloadStarted.current) return;
+    autoDownloadStarted.current = true;
+    const localTracks = localAlbums.flatMap((album) => album.tracks);
+    for (const track of localTracks) {
+      if (!savedDownloaded[track.id]) await downloadTrack(track, true);
+    }
+    setStatus("Tus canciones quedaron listas offline");
+  }
+
   async function downloadAlbum(album) {
     setPlaylistIds((items) => Array.from(new Set([...items, ...album.tracks.map((track) => track.id)])));
     for (const track of album.tracks) {
-      if (!downloaded[track.id]) await downloadTrack(track);
+      if (!isOffline(track)) await downloadTrack(track);
     }
   }
 
   async function downloadPlaylist() {
     for (const track of playlist) {
-      if (!downloaded[track.id]) await downloadTrack(track);
+      if (!isOffline(track)) await downloadTrack(track);
     }
   }
 
-  const allDownloaded = playlist.length > 0 && playlist.every((track) => downloaded[track.id]);
+  const isOffline = (track) => Boolean(track.asset || downloaded[track.id]);
+  const allDownloaded = playlist.length > 0 && playlist.every(isOffline);
 
   const renderHome = () => (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
@@ -291,7 +325,7 @@ export default function App() {
           <View style={styles.pills}>
             <Pill active icon={<Ionicons name="cloud-download" size={16} color="#ffffff" />}>Descargas</Pill>
             <Pill active={shuffle} icon={<Ionicons name="shuffle" size={16} color={shuffle ? "#ffffff" : "#ccd3ff"} />}>Random</Pill>
-            <Pill icon={<Ionicons name="radio" size={16} color="#ccd3ff" />}>Archive</Pill>
+            <Pill icon={<Ionicons name="musical-notes" size={16} color="#ccd3ff" />}>Local</Pill>
           </View>
         </LinearGradient>
       </ImageBackground>
@@ -299,7 +333,7 @@ export default function App() {
       <View style={styles.stats}>
         <MiniStat icon="musical-notes" value={tracks.length} label="Canciones" />
         <MiniStat icon="albums" value={albums.length} label="Albumes" />
-        <MiniStat icon="cloud-done" value={Object.keys(downloaded).length} label="Offline" />
+        <MiniStat icon="cloud-done" value={tracks.filter(isOffline).length} label="Offline" />
       </View>
 
       <View style={styles.sectionHeader}>
@@ -311,7 +345,7 @@ export default function App() {
           key={track.id}
           item={track}
           active={current?.id === track.id}
-          downloaded={Boolean(downloaded[track.id])}
+          downloaded={isOffline(track)}
           inPlaylist={playlistIds.includes(track.id)}
           busy={busyId === track.id}
           onPress={() => play(track)}
@@ -350,7 +384,7 @@ export default function App() {
           <Artwork uri={album.artwork} size={64} />
           <View style={styles.trackMeta}>
             <Text numberOfLines={1} style={styles.trackTitle}>{album.title}</Text>
-            <Text numberOfLines={1} style={styles.trackSub}>{album.artist} · {album.tracks.length} canciones · {formatCount(album.downloads)}</Text>
+            <Text numberOfLines={1} style={styles.trackSub}>{album.artist} · {album.tracks.length} canciones · {album.local ? "local" : formatCount(album.downloads)}</Text>
           </View>
           <Pressable style={styles.smallButton} onPress={() => downloadAlbum(album)}>
             <Ionicons name="download" size={18} color="#071024" />
@@ -365,7 +399,7 @@ export default function App() {
           key={track.id}
           item={track}
           active={current?.id === track.id}
-          downloaded={Boolean(downloaded[track.id])}
+          downloaded={isOffline(track)}
           inPlaylist={playlistIds.includes(track.id)}
           busy={busyId === track.id}
           onPress={() => play(track)}
@@ -382,7 +416,7 @@ export default function App() {
       <View style={styles.playlistCard}>
         <View style={styles.trackMeta}>
           <Text style={styles.playlistName}>Emmanuel Premium</Text>
-          <Text style={styles.trackSub}>{playlist.length} canciones · {Object.keys(downloaded).length} offline</Text>
+          <Text style={styles.trackSub}>{playlist.length} canciones · {playlist.filter(isOffline).length} offline</Text>
         </View>
         <Pressable style={[styles.downloadButton, allDownloaded && styles.downloadButtonDone]} onPress={downloadPlaylist}>
           <Ionicons name={allDownloaded ? "checkmark" : "download"} size={19} color="#071024" />
@@ -394,7 +428,7 @@ export default function App() {
           key={track.id}
           item={track}
           active={current?.id === track.id}
-          downloaded={Boolean(downloaded[track.id])}
+          downloaded={isOffline(track)}
           inPlaylist
           busy={busyId === track.id}
           onPress={() => play(track)}
@@ -429,10 +463,10 @@ export default function App() {
             <Artwork uri={current?.artwork} size={64} />
             <View style={styles.trackMeta}>
               <Text numberOfLines={1} style={styles.nowTitle}>{current?.title || "Busca una cancion"}</Text>
-              <Text numberOfLines={1} style={styles.trackSub}>{current?.artist || "Internet Archive"}</Text>
+              <Text numberOfLines={1} style={styles.trackSub}>{current?.artist || "Emmanuel Music"}</Text>
             </View>
             <Pressable onPress={() => current && downloadTrack(current)}>
-              <Ionicons name={current && downloaded[current.id] ? "cloud-done" : "cloud-download-outline"} size={25} color="#ffffff" />
+              <Ionicons name={current && isOffline(current) ? "cloud-done" : "cloud-download-outline"} size={25} color="#ffffff" />
             </Pressable>
           </View>
           <View style={styles.progressRail}>

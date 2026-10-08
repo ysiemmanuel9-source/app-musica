@@ -1,6 +1,7 @@
 node_modules/
 .expo/
 .expo-export-test/
+.expo-export-test-local/
 dist/
 build/
 *.ipa
