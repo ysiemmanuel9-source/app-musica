@@ -9,7 +9,7 @@ on:
 jobs:
   build-ios:
     name: EAS iOS production build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,17 +17,20 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: 24
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Validate iOS bundle
+        run: npx expo export --platform ios --output-dir .expo-export-ci
 
       - name: Build IPA with EAS
-        run: eas build --platform ios --profile production --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "Missing EXPO_TOKEN. Add it in GitHub: Settings > Secrets and variables > Actions > New repository secret."
+            exit 1
+          fi
+          npx eas-cli@latest build --platform ios --profile production --non-interactive
