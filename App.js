@@ -20,6 +20,7 @@ import localAlbums from "./src/localMusic";
 const cover = require("./assets/emmanuel-photo.png");
 const STORE_KEY = "emmanuel.music.state.v2";
 const DEFAULT_QUERY = "";
+const SEEK_STEP_MS = 15000;
 let AudioModule = null;
 let FileSystemModule = null;
 
@@ -56,6 +57,14 @@ function formatCount(value) {
   if (value > 999999) return `${Math.round(value / 100000) / 10}M`;
   if (value > 999) return `${Math.round(value / 100) / 10}k`;
   return String(value);
+}
+
+function formatTime(milliseconds) {
+  if (!Number.isFinite(milliseconds) || milliseconds <= 0) return "0:00";
+  const totalSeconds = Math.floor(milliseconds / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = `${totalSeconds % 60}`.padStart(2, "0");
+  return `${minutes}:${seconds}`;
 }
 
 async function fetchArchiveAlbums(term = DEFAULT_QUERY) {
@@ -125,7 +134,7 @@ function Artwork({ uri, size = 58 }) {
   );
 }
 
-function TrackRow({ item, active, downloaded, inPlaylist, busy, onPress, onDownload, onSave }) {
+function TrackRow({ item, active, downloaded, inPlaylist, busy, progress, onPress, onDownload, onSave }) {
   return (
     <Pressable style={[styles.trackRow, active && styles.trackRowActive]} onPress={onPress}>
       <Artwork uri={item.artwork} />
@@ -138,7 +147,14 @@ function TrackRow({ item, active, downloaded, inPlaylist, busy, onPress, onDownl
         <Ionicons name={inPlaylist ? "heart" : "heart-outline"} size={24} color={inPlaylist ? "#ff4f9a" : "#d7dcff"} />
       </Pressable>
       <Pressable hitSlop={12} onPress={onDownload}>
-        {busy ? <ActivityIndicator size="small" color="#24e3a4" /> : <Ionicons name={downloaded ? "checkmark-circle" : "arrow-down-circle-outline"} size={25} color={downloaded ? "#24e3a4" : "#d7dcff"} />}
+        {busy ? (
+          <View style={styles.busyBadge}>
+            <ActivityIndicator size="small" color="#24e3a4" />
+            {Number.isFinite(progress) && <Text style={styles.progressText}>{Math.round(progress * 100)}%</Text>}
+          </View>
+        ) : (
+          <Ionicons name={downloaded ? "checkmark-circle" : "arrow-down-circle-outline"} size={25} color={downloaded ? "#24e3a4" : "#d7dcff"} />
+        )}
       </Pressable>
     </Pressable>
   );
@@ -167,10 +183,18 @@ export default function App() {
   const [repeat, setRepeat] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
+  const [downloadProgress, setDownloadProgress] = useState({});
+  const [positionMillis, setPositionMillis] = useState(0);
+  const [durationMillis, setDurationMillis] = useState(0);
   const [status, setStatus] = useState("Biblioteca local lista sin internet");
 
   const tracks = useMemo(() => albums.flatMap((album) => album.tracks), [albums]);
-  const playlist = useMemo(() => tracks.filter((track) => playlistIds.includes(track.id)), [tracks, playlistIds]);
+  const catalogTracks = useMemo(() => {
+    const byId = new Map();
+    [...localAlbums.flatMap((album) => album.tracks), ...tracks].forEach((track) => byId.set(track.id, track));
+    return Array.from(byId.values());
+  }, [tracks]);
+  const playlist = useMemo(() => catalogTracks.filter((track) => playlistIds.includes(track.id)), [catalogTracks, playlistIds]);
 
   useEffect(() => {
     restore();
@@ -233,15 +257,21 @@ export default function App() {
         soundRef.current = null;
       }
       const source = track.asset || { uri: downloaded[track.id] || track.url };
+      if (!track.asset && !downloaded[track.id] && !track.url) throw new Error("Audio source missing");
       const Audio = getAudio();
       await Audio.setAudioModeAsync({ staysActiveInBackground: true, playsInSilentModeIOS: true, shouldDuckAndroid: true }).catch(() => {});
-      const { sound } = await Audio.Sound.createAsync(source, { shouldPlay: true });
+      const { sound } = await Audio.Sound.createAsync(source, { shouldPlay: true, progressUpdateIntervalMillis: 500 });
       sound.setOnPlaybackStatusUpdate((playback) => {
-        if (playback.didJustFinish) repeat ? play(track) : playNext();
+        if (!playback.isLoaded) return;
+        setPositionMillis(playback.positionMillis || 0);
+        setDurationMillis(playback.durationMillis || ((track.seconds || 0) * 1000));
+        if (playback.didJustFinish) repeat ? play(track) : playAdjacent(1, track);
       });
       soundRef.current = sound;
       setCurrent(track);
       setIsPlaying(true);
+      setPositionMillis(0);
+      setDurationMillis((track.seconds || 0) * 1000);
       setStatus(track.asset || downloaded[track.id] ? "Reproduciendo offline" : "Reproduciendo online");
     } catch {
       Alert.alert("Audio", "No pude reproducir esta pista. Prueba otra del catalogo.");
@@ -260,12 +290,29 @@ export default function App() {
     }
   }
 
-  function playNext() {
+  function playAdjacent(direction = 1, fromTrack = current) {
     const list = playlist.length ? playlist : tracks;
     if (!list.length) return;
-    if (shuffle) return play(list[Math.floor(Math.random() * list.length)]);
-    const index = list.findIndex((track) => track.id === current?.id);
-    play(list[(index + 1 + list.length) % list.length]);
+    if (shuffle && direction > 0) return play(list[Math.floor(Math.random() * list.length)]);
+    const index = list.findIndex((track) => track.id === fromTrack?.id);
+    const nextIndex = index < 0 ? 0 : (index + direction + list.length) % list.length;
+    play(list[nextIndex]);
+  }
+
+  function playNext() {
+    playAdjacent(1);
+  }
+
+  function playPrevious() {
+    playAdjacent(-1);
+  }
+
+  async function seekBy(offsetMillis) {
+    if (!soundRef.current) return;
+    const state = await soundRef.current.getStatusAsync();
+    if (!state.isLoaded) return;
+    const next = Math.max(0, Math.min((state.durationMillis || durationMillis || 0), (state.positionMillis || 0) + offsetMillis));
+    await soundRef.current.setPositionAsync(next);
   }
 
   function togglePlaylist(track) {
@@ -275,17 +322,28 @@ export default function App() {
   async function downloadTrack(track, silent = false) {
     setBusyId(track.id);
     try {
-      if (track.asset) {
+      if (track.local || track.asset) {
         setDownloaded((items) => ({ ...items, [track.id]: "bundled" }));
-        setStatus(`Lista offline: ${track.title}`);
+        setDownloadProgress((items) => ({ ...items, [track.id]: 1 }));
+        setStatus(`Incluida offline: ${track.title}`);
         return;
       }
+      if (!track.url) throw new Error("Missing remote url");
       const FileSystem = getFileSystem();
       await FileSystem.makeDirectoryAsync(downloadDir(), { intermediates: true });
       const destination = localUri(track);
       const info = await FileSystem.getInfoAsync(destination);
-      if (!info.exists) await FileSystem.downloadAsync(track.url, destination);
+      if (!info.exists) {
+        const download = FileSystem.createDownloadResumable(track.url, destination, {}, (event) => {
+          const expected = event.totalBytesExpectedToWrite || 0;
+          if (expected > 0) {
+            setDownloadProgress((items) => ({ ...items, [track.id]: event.totalBytesWritten / expected }));
+          }
+        });
+        await download.downloadAsync();
+      }
       setDownloaded((items) => ({ ...items, [track.id]: destination }));
+      setDownloadProgress((items) => ({ ...items, [track.id]: 1 }));
       setStatus(`Descargada: ${track.title}`);
     } catch {
       if (!silent) Alert.alert("Descarga", "No pude descargar esta pista. Puede que el archivo no este disponible.");
@@ -296,22 +354,40 @@ export default function App() {
 
   async function downloadAlbum(album) {
     setPlaylistIds((items) => Array.from(new Set([...items, ...album.tracks.map((track) => track.id)])));
+    if (album.tracks.every((track) => track.local || track.asset)) {
+      setDownloaded((items) => ({
+        ...items,
+        ...Object.fromEntries(album.tracks.map((track) => [track.id, "bundled"]))
+      }));
+      setStatus(`${album.title} ya esta incluido offline.`);
+      return;
+    }
     for (const track of album.tracks) {
       if (!isOffline(track)) await downloadTrack(track);
     }
   }
 
   async function downloadPlaylist() {
+    if (playlist.every((track) => track.local || track.asset)) {
+      setDownloaded((items) => ({
+        ...items,
+        ...Object.fromEntries(playlist.map((track) => [track.id, "bundled"]))
+      }));
+      setStatus("Playlist incluida offline en la app.");
+      return;
+    }
     for (const track of playlist) {
       if (!isOffline(track)) await downloadTrack(track);
     }
   }
 
-  const isOffline = (track) => Boolean(track.asset || downloaded[track.id]);
+  const isOffline = (track) => Boolean(track.local || track.asset || downloaded[track.id]);
   const allDownloaded = playlist.length > 0 && playlist.every(isOffline);
+  const playerDuration = durationMillis || ((current?.seconds || 0) * 1000);
+  const progressPercent = playerDuration ? Math.min(100, Math.max(0, (positionMillis / playerDuration) * 100)) : 0;
 
   const renderHome = () => (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
       <ImageBackground source={cover} resizeMode="cover" style={styles.heroImage} imageStyle={styles.heroImageInner}>
         <View style={styles.heroOverlay}>
           <View style={styles.brandRow}>
@@ -348,6 +424,7 @@ export default function App() {
           downloaded={isOffline(track)}
           inPlaylist={playlistIds.includes(track.id)}
           busy={busyId === track.id}
+          progress={downloadProgress[track.id]}
           onPress={() => play(track)}
           onDownload={() => downloadTrack(track)}
           onSave={() => togglePlaylist(track)}
@@ -357,7 +434,7 @@ export default function App() {
   );
 
   const renderSearch = () => (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
       <Text style={styles.pageTitle}>Buscar</Text>
       <View style={styles.searchBox}>
         <Ionicons name="search" size={22} color="#8f9ada" />
@@ -402,6 +479,7 @@ export default function App() {
           downloaded={isOffline(track)}
           inPlaylist={playlistIds.includes(track.id)}
           busy={busyId === track.id}
+          progress={downloadProgress[track.id]}
           onPress={() => play(track)}
           onDownload={() => downloadTrack(track)}
           onSave={() => togglePlaylist(track)}
@@ -411,7 +489,7 @@ export default function App() {
   );
 
   const renderLibrary = () => (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
       <Text style={styles.pageTitle}>Mi playlist</Text>
       <View style={styles.playlistCard}>
         <View style={styles.trackMeta}>
@@ -431,6 +509,7 @@ export default function App() {
           downloaded={isOffline(track)}
           inPlaylist
           busy={busyId === track.id}
+          progress={downloadProgress[track.id]}
           onPress={() => play(track)}
           onDownload={() => downloadTrack(track)}
           onSave={() => togglePlaylist(track)}
@@ -454,13 +533,15 @@ export default function App() {
           </View>
         </View>
 
-        {tab === "home" && renderHome()}
-        {tab === "search" && renderSearch()}
-        {tab === "library" && renderLibrary()}
+        <View style={styles.mainArea}>
+          {tab === "home" && renderHome()}
+          {tab === "search" && renderSearch()}
+          {tab === "library" && renderLibrary()}
+        </View>
 
         <View style={styles.player}>
           <View style={styles.playerTop}>
-            <Artwork uri={current?.artwork} size={64} />
+            <Artwork uri={current?.artwork} size={50} />
             <View style={styles.trackMeta}>
               <Text numberOfLines={1} style={styles.nowTitle}>{current?.title || "Busca una cancion"}</Text>
               <Text numberOfLines={1} style={styles.trackSub}>{current?.artist || "Emmanuel Music"}</Text>
@@ -470,19 +551,23 @@ export default function App() {
             </Pressable>
           </View>
           <View style={styles.progressRail}>
-            <View style={styles.progressFill} />
+            <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
+          </View>
+          <View style={styles.timeRow}>
+            <Text style={styles.timeText}>{formatTime(positionMillis)}</Text>
+            <Text style={styles.timeText}>{formatTime(playerDuration)}</Text>
           </View>
           <View style={styles.controls}>
             <Pressable onPress={() => setShuffle(!shuffle)}>
               <Ionicons name="shuffle" size={24} color={shuffle ? "#24e3a4" : "#d8dcff"} />
             </Pressable>
-            <Pressable onPress={playNext}>
+            <Pressable onPress={playPrevious} onLongPress={() => seekBy(-SEEK_STEP_MS)}>
               <Ionicons name="play-skip-back" size={30} color="#ffffff" />
             </Pressable>
             <Pressable style={styles.playButton} onPress={togglePlay}>
               <Ionicons name={isPlaying ? "pause" : "play"} size={34} color="#061023" />
             </Pressable>
-            <Pressable onPress={playNext}>
+            <Pressable onPress={playNext} onLongPress={() => seekBy(SEEK_STEP_MS)}>
               <Ionicons name="play-skip-forward" size={30} color="#ffffff" />
             </Pressable>
             <Pressable onPress={() => setRepeat(!repeat)}>
@@ -512,19 +597,21 @@ const styles = StyleSheet.create({
   screen: { backgroundColor: "#050614", flex: 1 },
   safe: { flex: 1 },
   topBar: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 10 },
-  appName: { color: "#ffffff", fontSize: 30, fontWeight: "900" },
+  appName: { color: "#ffffff", fontSize: 28, fontWeight: "900" },
   appSub: { color: "#9aa3d4", fontSize: 13, marginTop: 2 },
   headerActions: { alignItems: "center", flexDirection: "row", gap: 14 },
   headerPhoto: { borderRadius: 20, height: 40, width: 40 },
-  content: { paddingHorizontal: 18, paddingBottom: 240 },
-  heroImage: { height: 330, marginTop: 8 },
+  mainArea: { flex: 1 },
+  scroll: { flex: 1 },
+  content: { paddingHorizontal: 18, paddingBottom: 20 },
+  heroImage: { height: 288, marginTop: 8 },
   heroImageInner: { borderRadius: 8 },
   heroOverlay: { backgroundColor: "rgba(3,4,18,0.58)", borderRadius: 8, flex: 1, justifyContent: "flex-end", padding: 18 },
   brandRow: { alignItems: "center", flexDirection: "row", gap: 12 },
   avatar: { borderColor: "rgba(255,255,255,0.45)", borderRadius: 22, borderWidth: 1, height: 44, width: 44 },
   brandLabel: { color: "#ffffff", fontSize: 13, fontWeight: "900" },
   brandSmall: { color: "#d5dcff", fontSize: 12 },
-  heroTitle: { color: "#ffffff", fontSize: 31, fontWeight: "900", lineHeight: 36, marginTop: 16, maxWidth: 315 },
+  heroTitle: { color: "#ffffff", fontSize: 27, fontWeight: "900", lineHeight: 32, marginTop: 16, maxWidth: 315 },
   pills: { flexDirection: "row", flexWrap: "wrap", gap: 9, marginTop: 16 },
   pill: { alignItems: "center", backgroundColor: "rgba(255,255,255,0.11)", borderColor: "rgba(255,255,255,0.10)", borderRadius: 8, borderWidth: 1, flexDirection: "row", gap: 7, paddingHorizontal: 12, paddingVertical: 9 },
   pillActive: { backgroundColor: "#394dff" },
@@ -538,7 +625,7 @@ const styles = StyleSheet.create({
   sectionTitle: { color: "#ffffff", fontSize: 20, fontWeight: "900" },
   sectionAction: { color: "#24e3a4", fontSize: 12, fontWeight: "800", maxWidth: 180, textAlign: "right" },
   loader: { marginVertical: 18 },
-  trackRow: { alignItems: "center", backgroundColor: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.07)", borderRadius: 8, borderWidth: 1, flexDirection: "row", gap: 10, marginBottom: 9, padding: 10 },
+  trackRow: { alignItems: "center", backgroundColor: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.07)", borderRadius: 8, borderWidth: 1, flexDirection: "row", gap: 10, marginBottom: 9, minHeight: 76, padding: 10 },
   trackRowActive: { backgroundColor: "rgba(57,77,255,0.20)", borderColor: "rgba(110,127,255,0.50)" },
   artwork: { alignItems: "center", backgroundColor: "#12183d", borderRadius: 8, justifyContent: "center", overflow: "hidden" },
   artworkImage: { height: "100%", width: "100%" },
@@ -560,14 +647,18 @@ const styles = StyleSheet.create({
   downloadButtonDone: { backgroundColor: "#ffffff" },
   downloadButtonText: { color: "#071024", fontSize: 13, fontWeight: "900" },
   emptyText: { color: "#9ba5d5", fontSize: 15, marginTop: 12 },
-  player: { borderColor: "rgba(255,255,255,0.10)", borderRadius: 8, borderWidth: 1, bottom: 82, left: 14, overflow: "hidden", padding: 14, position: "absolute", right: 14 },
+  busyBadge: { alignItems: "center", minWidth: 30 },
+  progressText: { color: "#24e3a4", fontSize: 9, fontWeight: "900", marginTop: 2 },
+  player: { backgroundColor: "rgba(9,12,34,0.98)", borderColor: "rgba(255,255,255,0.10)", borderRadius: 8, borderWidth: 1, marginHorizontal: 14, marginTop: 8, padding: 12 },
   playerTop: { alignItems: "center", flexDirection: "row", gap: 12 },
   nowTitle: { color: "#ffffff", fontSize: 17, fontWeight: "900" },
-  progressRail: { backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 4, height: 5, marginTop: 13, overflow: "hidden" },
+  progressRail: { backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 4, height: 5, marginTop: 11, overflow: "hidden" },
   progressFill: { backgroundColor: "#ffffff", borderRadius: 4, height: 5, width: "38%" },
-  controls: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", marginTop: 14, paddingHorizontal: 4 },
-  playButton: { alignItems: "center", backgroundColor: "#ffffff", borderRadius: 34, height: 62, justifyContent: "center", width: 62 },
-  nav: { alignItems: "center", backgroundColor: "rgba(3,4,17,0.94)", borderColor: "rgba(255,255,255,0.08)", borderTopWidth: 1, bottom: 0, flexDirection: "row", height: 74, justifyContent: "space-around", left: 0, paddingBottom: 6, position: "absolute", right: 0 },
+  timeRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 5 },
+  timeText: { color: "#9ba5d5", fontSize: 11, fontWeight: "700" },
+  controls: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", marginTop: 8, paddingHorizontal: 4 },
+  playButton: { alignItems: "center", backgroundColor: "#ffffff", borderRadius: 28, height: 54, justifyContent: "center", width: 54 },
+  nav: { alignItems: "center", backgroundColor: "rgba(3,4,17,0.98)", borderColor: "rgba(255,255,255,0.08)", borderTopWidth: 1, flexDirection: "row", height: 70, justifyContent: "space-around", paddingBottom: 4 },
   navItem: { alignItems: "center", gap: 4, justifyContent: "center", minWidth: 82 },
   navText: { color: "#828bbb", fontSize: 12, fontWeight: "800" },
   navTextActive: { color: "#ffffff" }

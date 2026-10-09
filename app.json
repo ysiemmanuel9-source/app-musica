@@ -14,7 +14,8 @@
     },
     "assetBundlePatterns": [
       "assets/emmanuel-photo.png",
-      "assets/reference-player.jpg"
+      "assets/reference-player.jpg",
+      "assets/music/*"
     ],
     "ios": {
       "supportsTablet": true,
