@@ -30,7 +30,7 @@ jobs:
           cd ios
           pod install
 
-      - name: Smoke test app launch on iOS Simulator
+      - name: Smoke test release app launch on iOS Simulator
         run: |
           set -euo pipefail
           WORKSPACE="$(find ios -maxdepth 1 -name '*.xcworkspace' | head -n 1)"
@@ -38,7 +38,7 @@ jobs:
           xcodebuild \
             -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
-            -configuration Debug \
+            -configuration Release \
             -sdk iphonesimulator \
             -derivedDataPath build/sim \
             CODE_SIGNING_ALLOWED=NO \
@@ -48,21 +48,26 @@ jobs:
           xcrun simctl boot "$DEVICE_ID" || true
           xcrun simctl bootstatus "$DEVICE_ID" -b
 
-          APP_PATH="$(find build/sim/Build/Products/Debug-iphonesimulator -name '*.app' -type d | head -n 1)"
+          APP_PATH="$(find build/sim/Build/Products/Release-iphonesimulator -name '*.app' -type d | head -n 1)"
           xcrun simctl install "$DEVICE_ID" "$APP_PATH"
-          xcrun simctl launch "$DEVICE_ID" com.emmanuel.music
-          sleep 8
+          xcrun simctl launch --terminate-running-process "$DEVICE_ID" com.emmanuel.music
+          sleep 12
 
-          if ! xcrun simctl spawn "$DEVICE_ID" launchctl print system | grep -q "com.apple.CoreSimulator"; then
-            echo "Simulator did not stay healthy after launch"
+          xcrun simctl io "$DEVICE_ID" screenshot emmanuel-smoke.png || true
+
+          if ! xcrun simctl spawn "$DEVICE_ID" ps -A -o pid,comm,args | grep -q "[E]mmanuel"; then
+            echo "Emmanuel was not running 12 seconds after launch"
+            xcrun simctl spawn "$DEVICE_ID" log show --last 3m --predicate 'process == "Emmanuel" OR eventMessage CONTAINS "com.emmanuel.music" OR eventMessage CONTAINS "Emmanuel"' || true
             exit 1
           fi
 
-          if ! xcrun simctl spawn "$DEVICE_ID" ps -A | grep -q "Emmanuel"; then
-            echo "Emmanuel was not running 8 seconds after launch"
-            xcrun simctl spawn "$DEVICE_ID" log show --last 2m --predicate 'process == "Emmanuel"' || true
-            exit 1
-          fi
+      - name: Upload smoke screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emmanuel-ios-smoke-screenshot
+          path: emmanuel-smoke.png
+          if-no-files-found: ignore
 
       - name: Build unsigned app
         run: |

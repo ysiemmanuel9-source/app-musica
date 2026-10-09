@@ -15,7 +15,6 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import localAlbums from "./src/localMusic";
 
 const cover = require("./assets/emmanuel-photo.png");
@@ -314,7 +313,7 @@ export default function App() {
   const renderHome = () => (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
       <ImageBackground source={cover} resizeMode="cover" style={styles.heroImage} imageStyle={styles.heroImageInner}>
-        <LinearGradient colors={["rgba(3,4,18,0.12)", "rgba(3,4,18,0.94)"]} style={styles.heroOverlay}>
+        <View style={styles.heroOverlay}>
           <View style={styles.brandRow}>
             <Image source={cover} style={styles.avatar} />
             <View>
@@ -328,7 +327,7 @@ export default function App() {
             <Pill active={shuffle} icon={<Ionicons name="shuffle" size={16} color={shuffle ? "#ffffff" : "#ccd3ff"} />}>Random</Pill>
             <Pill icon={<Ionicons name="musical-notes" size={16} color="#ccd3ff" />}>Local</Pill>
           </View>
-        </LinearGradient>
+        </View>
       </ImageBackground>
 
       <View style={styles.stats}>
@@ -441,7 +440,7 @@ export default function App() {
   );
 
   return (
-    <LinearGradient colors={["#070827", "#050614", "#02030b"]} style={styles.screen}>
+    <View style={styles.screen}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.topBar}>
@@ -505,12 +504,12 @@ export default function App() {
           ))}
         </View>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
+  screen: { backgroundColor: "#050614", flex: 1 },
   safe: { flex: 1 },
   topBar: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 10 },
   appName: { color: "#ffffff", fontSize: 30, fontWeight: "900" },
@@ -520,7 +519,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 18, paddingBottom: 240 },
   heroImage: { height: 330, marginTop: 8 },
   heroImageInner: { borderRadius: 8 },
-  heroOverlay: { borderRadius: 8, flex: 1, justifyContent: "flex-end", padding: 18 },
+  heroOverlay: { backgroundColor: "rgba(3,4,18,0.58)", borderRadius: 8, flex: 1, justifyContent: "flex-end", padding: 18 },
   brandRow: { alignItems: "center", flexDirection: "row", gap: 12 },
   avatar: { borderColor: "rgba(255,255,255,0.45)", borderRadius: 22, borderWidth: 1, height: 44, width: 44 },
   brandLabel: { color: "#ffffff", fontSize: 13, fontWeight: "900" },
