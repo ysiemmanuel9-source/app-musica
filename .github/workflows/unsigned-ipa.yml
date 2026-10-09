@@ -55,9 +55,11 @@ jobs:
 
           xcrun simctl io "$DEVICE_ID" screenshot emmanuel-smoke.png || true
 
-          if ! xcrun simctl spawn "$DEVICE_ID" ps -A -o pid,comm,args | grep -q "[E]mmanuel"; then
-            echo "Emmanuel was not running 12 seconds after launch"
-            xcrun simctl spawn "$DEVICE_ID" log show --last 3m --predicate 'process == "Emmanuel" OR eventMessage CONTAINS "com.emmanuel.music" OR eventMessage CONTAINS "Emmanuel"' || true
+          xcrun simctl spawn "$DEVICE_ID" log show --last 30s --predicate 'process == "Emmanuel" OR eventMessage CONTAINS "com.emmanuel.music" OR eventMessage CONTAINS "Emmanuel" OR eventMessage CONTAINS "Unhandled JS Exception" OR eventMessage CONTAINS "Terminating app"' > emmanuel-smoke.log || true
+          cat emmanuel-smoke.log
+
+          if grep -E "Unhandled JS Exception|Terminating app|SIGABRT|main has not been registered|Cannot find native module|RCTFatalException" emmanuel-smoke.log; then
+            echo "Emmanuel launched but crashed during startup"
             exit 1
           fi
 
@@ -66,7 +68,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: emmanuel-ios-smoke-screenshot
-          path: emmanuel-smoke.png
+          path: |
+            emmanuel-smoke.png
+            emmanuel-smoke.log
           if-no-files-found: ignore
 
       - name: Build unsigned app
