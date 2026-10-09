@@ -6,4 +6,5 @@ build/
 *.ipa
 *.log
 work-logs*
+unsigned-logs*
 .DS_Store

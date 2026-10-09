@@ -16,7 +16,6 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Audio } from "expo-av";
-import { BlurView } from "expo-blur";
 import * as FileSystem from "expo-file-system";
 import { LinearGradient } from "expo-linear-gradient";
 import localAlbums from "./src/localMusic";
@@ -144,7 +143,6 @@ function MiniStat({ icon, value, label }) {
 
 export default function App() {
   const soundRef = useRef(null);
-  const autoDownloadStarted = useRef(false);
   const [tab, setTab] = useState("home");
   const [query, setQuery] = useState(DEFAULT_QUERY);
   const [albums, setAlbums] = useState(localAlbums);
@@ -162,7 +160,7 @@ export default function App() {
   const playlist = useMemo(() => tracks.filter((track) => playlistIds.includes(track.id)), [tracks, playlistIds]);
 
   useEffect(() => {
-    Audio.setAudioModeAsync({ staysActiveInBackground: true, playsInSilentModeIOS: true, shouldDuckAndroid: true });
+    Audio.setAudioModeAsync({ staysActiveInBackground: true, playsInSilentModeIOS: true, shouldDuckAndroid: true }).catch(() => {});
     restore();
     return () => {
       if (soundRef.current) soundRef.current.unloadAsync();
@@ -181,10 +179,8 @@ export default function App() {
         const parsed = JSON.parse(saved);
         setPlaylistIds(parsed.playlistIds?.length ? parsed.playlistIds : localAlbums.flatMap((album) => album.tracks.map((track) => track.id)));
         setDownloaded(parsed.downloaded || {});
-        autoDownloadLibrary(parsed.downloaded || {});
       } else {
         setPlaylistIds(localAlbums.flatMap((album) => album.tracks.map((track) => track.id)));
-        autoDownloadLibrary({});
       }
       setCurrent(localAlbums[0]?.tracks[0] || null);
       setLoading(false);
@@ -282,16 +278,6 @@ export default function App() {
     } finally {
       setBusyId(null);
     }
-  }
-
-  async function autoDownloadLibrary(savedDownloaded) {
-    if (autoDownloadStarted.current) return;
-    autoDownloadStarted.current = true;
-    const localTracks = localAlbums.flatMap((album) => album.tracks);
-    for (const track of localTracks) {
-      if (!savedDownloaded[track.id]) await downloadTrack(track, true);
-    }
-    setStatus("Tus canciones quedaron listas offline");
   }
 
   async function downloadAlbum(album) {
@@ -458,7 +444,7 @@ export default function App() {
         {tab === "search" && renderSearch()}
         {tab === "library" && renderLibrary()}
 
-        <BlurView intensity={35} tint="dark" style={styles.player}>
+        <View style={styles.player}>
           <View style={styles.playerTop}>
             <Artwork uri={current?.artwork} size={64} />
             <View style={styles.trackMeta}>
@@ -489,7 +475,7 @@ export default function App() {
               <MaterialCommunityIcons name="repeat" size={25} color={repeat ? "#24e3a4" : "#d8dcff"} />
             </Pressable>
           </View>
-        </BlurView>
+        </View>
 
         <View style={styles.nav}>
           {[
