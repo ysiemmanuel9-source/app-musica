@@ -30,6 +30,40 @@ jobs:
           cd ios
           pod install
 
+      - name: Smoke test app launch on iOS Simulator
+        run: |
+          set -euo pipefail
+          WORKSPACE="$(find ios -maxdepth 1 -name '*.xcworkspace' | head -n 1)"
+          SCHEME="Emmanuel"
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath build/sim \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+          DEVICE_ID="$(xcrun simctl list devices available -j | ruby -rjson -e 'data = JSON.parse(STDIN.read); dev = data["devices"].values.flatten.find { |d| d["name"].include?("iPhone") && d["isAvailable"] }; puts dev["udid"]')"
+          xcrun simctl boot "$DEVICE_ID" || true
+          xcrun simctl bootstatus "$DEVICE_ID" -b
+
+          APP_PATH="$(find build/sim/Build/Products/Debug-iphonesimulator -name '*.app' -type d | head -n 1)"
+          xcrun simctl install "$DEVICE_ID" "$APP_PATH"
+          xcrun simctl launch "$DEVICE_ID" com.emmanuel.music
+          sleep 8
+
+          if ! xcrun simctl spawn "$DEVICE_ID" launchctl print system | grep -q "com.apple.CoreSimulator"; then
+            echo "Simulator did not stay healthy after launch"
+            exit 1
+          fi
+
+          if ! xcrun simctl spawn "$DEVICE_ID" ps -A | grep -q "Emmanuel"; then
+            echo "Emmanuel was not running 8 seconds after launch"
+            xcrun simctl spawn "$DEVICE_ID" log show --last 2m --predicate 'process == "Emmanuel"' || true
+            exit 1
+          fi
+
       - name: Build unsigned app
         run: |
           set -euo pipefail

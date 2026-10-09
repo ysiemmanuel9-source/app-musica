@@ -3,6 +3,7 @@
     "name": "Emmanuel",
     "slug": "emmanuel-music",
     "version": "1.0.0",
+    "jsEngine": "jsc",
     "orientation": "portrait",
     "icon": "./assets/emmanuel-photo.png",
     "userInterfaceStyle": "dark",

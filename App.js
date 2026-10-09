@@ -15,15 +15,29 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Audio } from "expo-av";
-import * as FileSystem from "expo-file-system";
 import { LinearGradient } from "expo-linear-gradient";
 import localAlbums from "./src/localMusic";
 
 const cover = require("./assets/emmanuel-photo.png");
 const STORE_KEY = "emmanuel.music.state.v2";
-const DOWNLOAD_DIR = `${FileSystem.documentDirectory}emmanuel-audio/`;
 const DEFAULT_QUERY = "";
+let AudioModule = null;
+let FileSystemModule = null;
+
+function getAudio() {
+  if (!AudioModule) AudioModule = require("expo-av").Audio;
+  return AudioModule;
+}
+
+function getFileSystem() {
+  if (!FileSystemModule) FileSystemModule = require("expo-file-system");
+  return FileSystemModule;
+}
+
+function downloadDir() {
+  const FileSystem = getFileSystem();
+  return `${FileSystem.documentDirectory}emmanuel-audio/`;
+}
 
 function text(value, fallback = "Desconocido") {
   if (Array.isArray(value)) return value.filter(Boolean).join(", ") || fallback;
@@ -35,7 +49,7 @@ function archiveFileUrl(identifier, fileName) {
 }
 
 function localUri(track) {
-  return `${DOWNLOAD_DIR}${`${track.id}.mp3`.replace(/[^a-zA-Z0-9_.-]/g, "_")}`;
+  return `${downloadDir()}${`${track.id}.mp3`.replace(/[^a-zA-Z0-9_.-]/g, "_")}`;
 }
 
 function formatCount(value) {
@@ -160,7 +174,6 @@ export default function App() {
   const playlist = useMemo(() => tracks.filter((track) => playlistIds.includes(track.id)), [tracks, playlistIds]);
 
   useEffect(() => {
-    Audio.setAudioModeAsync({ staysActiveInBackground: true, playsInSilentModeIOS: true, shouldDuckAndroid: true }).catch(() => {});
     restore();
     return () => {
       if (soundRef.current) soundRef.current.unloadAsync();
@@ -173,7 +186,6 @@ export default function App() {
 
   async function restore() {
     try {
-      await FileSystem.makeDirectoryAsync(DOWNLOAD_DIR, { intermediates: true });
       const saved = await AsyncStorage.getItem(STORE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -222,6 +234,8 @@ export default function App() {
         soundRef.current = null;
       }
       const source = track.asset || { uri: downloaded[track.id] || track.url };
+      const Audio = getAudio();
+      await Audio.setAudioModeAsync({ staysActiveInBackground: true, playsInSilentModeIOS: true, shouldDuckAndroid: true }).catch(() => {});
       const { sound } = await Audio.Sound.createAsync(source, { shouldPlay: true });
       sound.setOnPlaybackStatusUpdate((playback) => {
         if (playback.didJustFinish) repeat ? play(track) : playNext();
@@ -267,7 +281,8 @@ export default function App() {
         setStatus(`Lista offline: ${track.title}`);
         return;
       }
-      await FileSystem.makeDirectoryAsync(DOWNLOAD_DIR, { intermediates: true });
+      const FileSystem = getFileSystem();
+      await FileSystem.makeDirectoryAsync(downloadDir(), { intermediates: true });
       const destination = localUri(track);
       const info = await FileSystem.getInfoAsync(destination);
       if (!info.exists) await FileSystem.downloadAsync(track.url, destination);
